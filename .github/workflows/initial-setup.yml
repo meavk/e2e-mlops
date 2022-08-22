@@ -1,11 +1,6 @@
 name: Setup pipeline
 
-on:
-  push:
-    branches:
-      - 'main'
-    paths:
-      - '.github/workflows/initial-setup.yml'
+on: workflow_dispatch
 
 jobs:
   setup-environment:
