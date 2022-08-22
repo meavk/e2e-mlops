@@ -1,7 +1,7 @@
 input_table: 'default.bronze_customers_csv'
 
 data_prep_params:
-  label_col: 'churnString'
+  label_col: 'Churn_Label'
   ohe: False
 #  # Only require cat_cols if ohe=True
 #  cat_cols: ['gender', 'partner', 'dependents',
