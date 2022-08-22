@@ -50,7 +50,7 @@ class FeatureStoreTableConfig:
         table_name (str)
             Name of feature table
         primary_keys (string or list)
-            String or list of strings, of columns to use as the primary key(s). Use single column (customerID) as the
+            String or list of strings, of columns to use as the primary key(s). Use single column (CustomerID) as the
             primary key for the telco churn example.
         description (str)
             [Optional] string containing description to attribute to the feature table in the Feature Store.
