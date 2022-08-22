@@ -1,4 +1,4 @@
-input_table: 'ibm_telco_churn.bronze_customers'
+input_table: 'default.bronze_customers_csv'
 
 data_prep_params:
   label_col: 'churnString'
