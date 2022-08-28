@@ -1,4 +1,4 @@
-name: Run e2e pipeline
+name: Run Batch inference pipeline
 
 on: workflow_dispatch
 
