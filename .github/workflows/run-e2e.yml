@@ -1,4 +1,4 @@
-name: Release pipeline
+name: Run e2e pipeline
 
 on: workflow_dispatch
 
