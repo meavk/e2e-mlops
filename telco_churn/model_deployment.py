@@ -4,6 +4,7 @@ import mlflow
 import pandas as pd
 import pyspark.sql
 from mlflow.tracking import MlflowClient
+from mlflow.entities.model_registry import ModelVersion
 
 from telco_churn.common import MLflowTrackingConfig
 from telco_churn.model_inference import ModelInference
@@ -65,6 +66,24 @@ class ModelDeployment:
             mlflow.set_experiment(experiment_name=mlflow_tracking_cfg.experiment_path)
         else:
             raise RuntimeError('MLflow experiment_id or experiment_path must be set in MLflowTrackingConfig')
+    
+    def _print_model_info(self, m: ModelVersion):
+        _logger.info("name: {}".format(m.name))
+        _logger.info("latest version: {}".format(m.version))
+        _logger.info("run_id: {}".format(m.run_id))
+        _logger.info("current_stage: {}".format(m.current_stage))
+
+    def _transition_latest_model_to_staging(self):
+        client = MlflowClient()
+        model_name = self.cfg.mlflow_tracking_cfg.model_name
+        latest_model_version = client.get_latest_versions(name=model_name, stages=['None'])[0] 
+        _logger.info("------Latest model at stage 'None'------")
+        self._print_model_info(latest_model_version)    
+        _logger.info("------Transitioning latest model at 'None' to 'Staging'------")
+        staging_model_version = client.transition_model_version_stage(name=model_name,
+                                              version=latest_model_version.version,
+                                              stage='staging')       
+        self._print_model_info(staging_model_version)
 
     def _get_model_uri_by_stage(self, stage: str):
         return f'models:/{self.cfg.mlflow_tracking_cfg.model_name}/{stage}'
@@ -180,18 +199,22 @@ class ModelDeployment:
         Runner method to orchestrate model comparison and potential model promotion.
 
         Steps:
-            1. Set MLflow Tracking experiment. Used to track metrics computed when comparing Staging versus Production
+            1. Transition latest model in 'None' stage to 'Staging'.
+            2. Set MLflow Tracking experiment. Used to track metrics computed when comparing Staging versus Production
                models.
-            2. Load Staging and Production models and score against reference dataset provided. The reference data
+            3. Load Staging and Production models and score against reference dataset provided. The reference data
                specified must currently be a table.
-            3. Compute evaluation metric for both Staging and Production model predictions against reference data
-            4. If higher_is_better=True, the Staging model will be promoted in place of the Production model iff the
+            4. Compute evaluation metric for both Staging and Production model predictions against reference data
+            5. If higher_is_better=True, the Staging model will be promoted in place of the Production model iff the
                Staging model evaluation metric is higher than the Production model evaluation metric.
                If higher_is_better=False, the Staging model will be promoted in place of the Production model iff the
                Staging model evaluation metric is lower than the Production model evaluation metric.
 
         """
         _logger.info('==========Running model deployment==========')
+
+        _logger.info('==========Transitioning latest model to Staging stage==========')
+        self._transition_latest_model_to_staging()
 
         _logger.info('==========Setting MLflow experiment==========')
         mlflow_tracking_cfg = self.cfg.mlflow_tracking_cfg
